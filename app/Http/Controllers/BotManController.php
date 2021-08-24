@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use BotMan\BotMan\BotMan;
 use Illuminate\Http\Request;
 use BotMan\BotMan\Messages\Incoming\Answer;
+use BotMan\BotMan\Messages\Outgoing\Actions\Button;
+use BotMan\BotMan\Messages\Outgoing\Question;
 
 class BotManController extends Controller
 {
@@ -51,6 +53,18 @@ class BotManController extends Controller
             $this->askName($botman);
         });
 
+        $botman->hears('buttons', function($botman) {
+            $question = Question::create('Select a time slot')
+            ->callbackId('select_time')
+            ->addButtons([
+                Button::create('hours')->value('hours'),
+                Button::create('1 PM')->value('1 PM'),
+                Button::create('3 PM')->value('3 PM'),
+            ]);
+
+            $botman->reply($question);
+        });
+
 
         $botman->listen();
     }
@@ -67,6 +81,8 @@ class BotManController extends Controller
             $this->say('Nice to meet you '.$name);
         });
     }
+
+   
 
 
 
