@@ -29,7 +29,7 @@ class BotManController extends Controller
 
         $botman->hears('feedback', function($botman) {
             $this->provideFeedback($botman);
-            $this->questionTemplate($botman);
+            
         });
 
         $botman->hears('hours', function($botman) {
@@ -87,6 +87,23 @@ class BotManController extends Controller
             $botman->reply($question);
     }
 
+        /**
+     * Questions for confirming feedback.
+     */
+    // public function questionTemplateFeedbackVerifacation($botman)
+    // {
+    //     $question = Question::create('Does that look correct to you')
+    //         ->callbackId('feedback_verifactation_buttons')
+    //         ->addButtons([
+    //             Button::create('Sure Does!')->value('verified_feedback_response'),
+    //             Button::create('Location')->value('unverified_feedback_response'),
+               
+
+    //         ]);
+    //         $botman->reply($question);
+    // }
+
+
 
      /**
      * Template for callback to questions.
@@ -133,8 +150,13 @@ class BotManController extends Controller
    
             $feedback = $answer->getText();
    
-            $this->say('Verify Your Message: '.$feedback);
+            $this->say(''.$feedback);
+            
+            // $this->questionTemplateFeedbackVerifacation($botman);
+
+            
         });
+        
     }
 
     /**
