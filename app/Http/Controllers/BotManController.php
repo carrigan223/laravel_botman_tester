@@ -29,44 +29,81 @@ class BotManController extends Controller
 
         $botman->hears('feedback', function($botman) {
             $this->provideFeedback($botman);
+            $this->questionTemplate($botman);
         });
 
         $botman->hears('hours', function($botman) {
             $this->provideHours($botman);
+            $this->questionTemplate($botman);
             
         });
 
         $botman->hears('Location', function($botman) {
             $this->provideLocation($botman);
+            $this->questionTemplate($botman);
 
         });
 
         $botman->hears('specials', function($botman) {
             $this->provideSpecials($botman);
+            $this->questionTemplate($botman);
         });
 
         $botman->hears('menu', function($botman) {
             $this->provideMenu($botman);
+            $this->questionTemplate($botman);
         });
 
         $botman->hears('ask name', function($botman) {
             $this->askName($botman);
+            
         });
 
         $botman->hears('buttons', function($botman) {
-            $question = Question::create('Select a time slot')
-            ->callbackId('select_time')
-            ->addButtons([
-                Button::create('hours')->value('hours'),
-                Button::create('1 PM')->value('1 PM'),
-                Button::create('3 PM')->value('3 PM'),
-            ]);
+          
 
-            $botman->reply($question);
+            $this->questionTemplateIntial($botman);
         });
 
 
         $botman->listen();
+    }
+
+         /**
+     * Template for initial call to questions.
+     */
+     public function questionTemplateIntial($botman)
+    {
+        $question = Question::create('')
+            ->callbackId('guide_buttons')
+            ->addButtons([
+                Button::create('Hours')->value('hours'),
+                Button::create('Location')->value('location'),
+                Button::create('Feedback')->value('feedback'),
+                Button::create('Specials')->value('specials'),
+                Button::create('Menu')->value('menu'),
+
+            ]);
+            $botman->reply($question);
+    }
+
+
+     /**
+     * Template for callback to questions.
+     */
+    public function questionTemplate($botman)
+    {
+        $question = Question::create('What else can I help you with?')
+            ->callbackId('select_time')
+            ->addButtons([
+                Button::create('Hours')->value('hours'),
+                Button::create('Location')->value('location'),
+                Button::create('Feedback')->value('feedback'),
+                Button::create('Specials')->value('specials'),
+                Button::create('Menu')->value('menu'),
+
+            ]);
+            $botman->reply($question);
     }
    
     /**
@@ -106,6 +143,7 @@ class BotManController extends Controller
     public function provideHours($botman)
     {
         $botman->reply('We are open daily Mon-Sat from 9AM - 5PM. We are closed Sunday ');
+        
     }
 
     /**
@@ -114,6 +152,7 @@ class BotManController extends Controller
     public function provideLocation($botman) 
     {
         $botman->reply('You can visit us at 7128 Miramar Rd, San Diego, CA 92121.');
+
     }
 
     /**
@@ -122,6 +161,7 @@ class BotManController extends Controller
     public function provideSpecials($botman)
     {
         $botman->reply('These are our specials');
+
     }
 
     /**
@@ -130,5 +170,6 @@ class BotManController extends Controller
     public function provideMenu($botman)
     {
         $botman->reply('this is the menu');
+
     }
 }
