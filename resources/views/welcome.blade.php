@@ -580,7 +580,7 @@
         var botmanWidget = {
             chatServer: 'http://127.0.0.1:8000/botman',
             aboutText: 'ssdsd',
-            introMessage: "hello"
+            introMessage: "Welcome To Buzzbot!"
         };
     </script>
 
