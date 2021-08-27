@@ -17,4 +17,8 @@ use App\Http\Controllers\BotManController;
 Route::get('/', function () {
      return view('welcome');
  });
+
+ Route::get('/chatframe', function () {
+     return view('chatFrame');
+ });
  Route::match(['get', 'post'], '/botman',[BotManController::class, 'handle']);

@@ -27,9 +27,9 @@ class BotManController extends Controller
    
         // });
 
+
         $botman->hears('feedback', function($botman) {
-            $this->provideFeedback($botman);
-            
+            $this->provideFeedback($botman);            
         });
 
         $botman->hears('hours', function($botman) {
@@ -131,7 +131,6 @@ class BotManController extends Controller
         $botman->ask('Hello! What is your Name?', function(Answer $answer) {
    
             $name = $answer->getText();
-   
             $this->say('Nice to meet you '.$name);
         });
     }
@@ -147,16 +146,9 @@ class BotManController extends Controller
     public function provideFeedback($botman)
     {
         $botman->ask('Thank you for taking the time to provide feedback, Please let us know how we did.', function(Answer $answer) {
-   
             $feedback = $answer->getText();
-   
-            $this->say(''.$feedback);
-            
-            // $this->questionTemplateFeedbackVerifacation($botman);
-
-            
+            $this->say($feedback);
         });
-        
     }
 
     /**
@@ -165,7 +157,6 @@ class BotManController extends Controller
     public function provideHours($botman)
     {
         $botman->reply('We are open daily Mon-Sat from 9AM - 5PM. We are closed Sunday ');
-        
     }
 
     /**
@@ -174,7 +165,6 @@ class BotManController extends Controller
     public function provideLocation($botman) 
     {
         $botman->reply('You can visit us at 7128 Miramar Rd, San Diego, CA 92121.');
-
     }
 
     /**
@@ -183,7 +173,6 @@ class BotManController extends Controller
     public function provideSpecials($botman)
     {
         $botman->reply('These are our specials');
-
     }
 
     /**
@@ -192,6 +181,5 @@ class BotManController extends Controller
     public function provideMenu($botman)
     {
         $botman->reply('this is the menu');
-
     }
 }

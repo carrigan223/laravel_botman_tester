@@ -569,21 +569,31 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>How to install Botman Chatbot in Laravel? - Tutsmake.org</title>
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/css/chat.css">
     </head>
 
     <body>
+        <h1>HEllo World</h1>
+
+        <!-- React root DOM -->
+        <div id="example">
+        </div>
+
+        <!-- React JS -->
+        <script src="{{ asset('js/app.js') }}" defer></script>
     </body>
 
     <link rel="stylesheet" type="text/css"
-        href="https://cdn.jsdelivr.net/npm/botman-web-widget@0/build/assets/css/chat.min.css">
+        href="/Users/andrewcarrigan/Desktop/ripemetrics/botman_blog_react/public/css/chat.css">
     <script>
         var botmanWidget = {
             chatServer: 'http://127.0.0.1:8000/botman',
-            aboutText: 'ssdsd',
-            introMessage: "Welcome To Buzzbot!"
+            aboutText: 'this bot is testing controllers',
+            introMessage: "This is a cdn being called by script ",
+            frameEndpoint: 'http://127.0.0.1:8000/chatframe'   
         };
     </script>
 
-    <script src='https://cdn.jsdelivr.net/npm/botman-web-widget@0/build/js/widget.js'></script>
+    <script src='/js/widget.js'></script>
 
 </html>
