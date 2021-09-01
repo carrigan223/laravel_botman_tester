@@ -572,15 +572,16 @@
         <link rel="stylesheet" type="text/css" href="/css/chat.css">
     </head>
 
-    <body>
+    <body onload="setTimeout(triggerBot, 1000)">
         <h1>HEllo World</h1>
-
+        <a href="#" onclick="botmanChatWidget.whisper('buttons')">Open Bot</a>
+        {{-- 
         <!-- React root DOM -->
         <div id="example">
         </div>
 
         <!-- React JS -->
-        <script src="{{ asset('js/app.js') }}" defer></script>
+        <script src="{{ asset('js/app.js') }}" defer></script> --}}
     </body>
 
     <link rel="stylesheet" type="text/css"
@@ -589,9 +590,16 @@
         var botmanWidget = {
             chatServer: 'http://127.0.0.1:8000/botman',
             aboutText: 'this bot is testing controllers',
-            introMessage: "This is a cdn being called by script ",
+            introMessage: "Welcome To Buzzbot",
             frameEndpoint: 'http://127.0.0.1:8000/chatframe'   
         };
+    </script>
+    <script>
+        const triggerBot = function() {
+            console.log("script is running")
+        botmanChatWidget.whisper('initial');
+       }
+
     </script>
 
     <script src='/js/widget.js'></script>

@@ -7,12 +7,37 @@ use Illuminate\Http\Request;
 use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Outgoing\Question;
+use BotMan\BotMan\Messages\Attachments\GenericTemplate;
+use BotMan\BotMan\Messages\Attachments\Location;
+use BotMan\BotMan\Messages\Outgoing\OutgoingMessage;
+use Illuminate\Support\Facades\Log;
+
+
 
 class BotManController extends Controller
 {
     /**
      * Botman conversation logic
      */
+
+    protected $store = array(
+        'location' => '123 abc way New York, NY 10075',
+        'hours' => '9AM - 5PM',
+        'daysOpen' => 'Mon - Sat',
+        'daysClosed' => 'Sat',
+    );
+  
+
+    protected $firstname;
+    protected $email;
+
+    
+
+    
+
+    
+    
+
      public function handle()
     {
         $botman = app('botman');
@@ -55,15 +80,33 @@ class BotManController extends Controller
         });
 
         $botman->hears('ask name', function($botman) {
-            $this->askName($botman);
+            $this->askFirstName($botman);
+            // $this->askEmail($botman);
+
+            // $botman->reply('hello friend');
             
         });
+
+        $botman->hears('template', function($botman) {
+            $this->template($botman);
+            
+        });
+
 
         $botman->hears('buttons', function($botman) {
           
 
             $this->questionTemplateIntial($botman);
         });
+
+       
+
+        $botman->hears('initial', function($botman) {
+            $this->initailGreeting($botman);
+            $this->askFirstName($botman);
+        });
+
+
 
 
         $botman->listen();
@@ -156,7 +199,9 @@ class BotManController extends Controller
      */
     public function provideHours($botman)
     {
-        $botman->reply('We are open daily Mon-Sat from 9AM - 5PM. We are closed Sunday ');
+        $botman->typesAndWaits(1);
+        $botman->reply('We are open daily '.$this->store['daysOpen'].' from '.$this->store['hours'].' We are closed '.$this->store['daysClosed']);
+        $botman->reply('test');
     }
 
     /**
@@ -164,7 +209,9 @@ class BotManController extends Controller
      */
     public function provideLocation($botman) 
     {
-        $botman->reply('You can visit us at 7128 Miramar Rd, San Diego, CA 92121.');
+        $botman->reply('We are located at '.$this->store['location']);
+        // $botman->reply('test');
+
     }
 
     /**
@@ -172,6 +219,7 @@ class BotManController extends Controller
      */
     public function provideSpecials($botman)
     {
+        $botman->typesAndWaits(1);
         $botman->reply('These are our specials');
     }
 
@@ -180,6 +228,39 @@ class BotManController extends Controller
      */
     public function provideMenu($botman)
     {
+        $botman->typesAndWaits(1);
         $botman->reply('this is the menu');
     }
+
+    public function initailGreeting($botman)
+    {
+        $botman->typesAndWaits(1);
+        $botman->reply('Im here to start to make your experience with Buzz a little easier');
+        $botman->reply('Lets start with some of your info so I can better help you');
+
+    }
+
+
+    public function askFirstname($botman)
+    {
+        $botman->ask('Hello! What is your firstname?', function(Answer $answer) {
+            // Save result
+            $this->firstname = $answer->getText();
+
+            $this->say('Nice to meet you '.$this->firstname);
+            // Log::info($this->store);
+            
+        });
+    }
+
+    public function askEmail($botman){
+        $botman->ask('One more thing - what is your email?', function(Answer $answer) {
+            // Save result
+            $this->email = $answer->getText();
+
+            $this->say('Great - that is all we need, '.$this->firstname);
+        });
+    }
+
+
 }
