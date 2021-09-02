@@ -34,8 +34,6 @@ class BotManController extends Controller
     
 
     
-
-    
     
 
      public function handle()
