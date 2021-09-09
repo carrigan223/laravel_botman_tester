@@ -11,6 +11,7 @@ use BotMan\BotMan\Messages\Attachments\GenericTemplate;
 use BotMan\BotMan\Messages\Attachments\Location;
 use BotMan\BotMan\Messages\Outgoing\OutgoingMessage;
 use Illuminate\Support\Facades\Log;
+use App\Botman\Conversation\OnboardingConversation;
 
 
 
@@ -20,16 +21,81 @@ class BotManController extends Controller
      * Botman conversation logic
      */
 
-    protected $store = array(
+    protected $store = [
         'location' => '123 abc way New York, NY 10075',
         'hours' => '9AM - 5PM',
         'daysOpen' => 'Mon - Sat',
         'daysClosed' => 'Sat',
+    ];
+
+
+    // protected $productOne = [
+    //     'name' => 'Lemonatti',
+    //     'brand' => 'Connected Cannabis Co',
+    //     'price' => '$29.99',
+    //     'thcContent' => 'THC 26.42% CBD 0.04%*',
+    //     'productType' => 'Flower',
+    //     'strainType' => 'Sativa',
+    //     'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/83ef1fea-2f5c-4d4d-8ac8-da6fd2b66b2f.jpg'
+    // ];
+
+    // protected $productTwo = [
+    //     'name' => 'Cookies',
+    //     'brand' => 'Arcata Fire',
+    //     'price' => '$56.00',
+    //     'thcContent' => 'THC 73.29% CBD 0.01%*',
+    //     'productType' => 'Live Sauce Cartridge',
+    //     'strainType' => 'Indica',
+    //     'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/2dadee70-5e3d-4f44-b988-ee89606347ea.jpg'
+    // ];
+
+    // protected $productThree = [
+    //     'name' => 'Wild Cherry - Excite [20pk] (100mg)',
+    //     'brand' => 'Kiva Confections',
+    //     'price' => '$18.00',
+    //     'thcContent' => '100mg 20pk*',
+    //     'productType' => 'Edible',
+    //     'strainType' => 'Sativa',
+    //     'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/ba53c492-e206-4fb3-bda7-b29cd3df8b1f.jpg'
+    // ];
+
+   protected $products = array(
+        'productOne' => array(
+            'name' => 'Lemonatti',
+            'brand' => 'Connected Cannabis Co',
+            'price' => '$29.99',
+            'thcContent' => 'THC 26.42% CBD 0.04%*',
+            'productType' => 'Flower',
+            'strainType' => 'Sativa',
+            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/83ef1fea-2f5c-4d4d-8ac8-da6fd2b66b2f.jpg'
+        ),
+        'productTwo' => array(
+            'name' => 'Cookies',
+            'brand' => 'Arcata Fire',
+            'price' => '$56.00',
+            'thcContent' => 'THC 73.29% CBD 0.01%*',
+            'productType' => 'Live Sauce Cartridge',
+            'strainType' => 'Indica',
+            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/2dadee70-5e3d-4f44-b988-ee89606347ea.jpg'
+        ),
+        'productThree' => array(
+            'name' => 'Wild Cherry - Excite [20pk] (100mg)',
+            'brand' => 'Kiva Confections',
+            'price' => '$18.00',
+            'thcContent' => '100mg 20pk*',
+            'productType' => 'Edible',
+            'strainType' => 'Sativa',
+            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/ba53c492-e206-4fb3-bda7-b29cd3df8b1f.jpg'
+        )
     );
+
+
+
   
 
     protected $firstname;
     protected $email;
+    protected $phone;
 
     
 
@@ -55,6 +121,36 @@ class BotManController extends Controller
             $this->provideFeedback($botman);            
         });
 
+        $botman->hears('card', function($botman) {
+            $botman->reply("
+                <div>".foreach($this->products as $product) {
+                    "<div>Hello</div>"
+                }."</div>
+            ")
+
+        });
+
+        $botman->hears('initial', function ($botman) {
+            $this->initailGreeting($botman);
+            $botman->ask('what is your name', function ($answer, $conversation) {
+                $this->firstname = $answer->getText();
+                $conversation->say('Nice to meet you '.$this->firstname);
+                // $this->questionTemplate($botman);
+                $conversation->ask('Also if you could provide me with your Email?', function ($answer, $conversation) {
+                    $this->email = $answer->getText();
+                    $conversation->say('great thank you '.$this->firstname.' your email is '.$this->email);
+                    $conversation->ask('And your phone number please', function ($answer, $conversation) {
+                    $this->phone = $answer->getText();
+                    $conversation->say('great thank you '.$this->firstname.' your phone number is '.$this->phone);
+                    });
+                });
+
+            });
+           
+
+            
+        });
+
         $botman->hears('hours', function($botman) {
             $this->provideHours($botman);
             $this->questionTemplate($botman);
@@ -67,6 +163,10 @@ class BotManController extends Controller
 
         });
 
+        // $botman->hears('onboard', function($bot) {
+        //     $bot->startConversation(new OnboardingConversation);
+        // });
+
         $botman->hears('specials', function($botman) {
             $this->provideSpecials($botman);
             $this->questionTemplate($botman);
@@ -75,6 +175,18 @@ class BotManController extends Controller
         $botman->hears('menu', function($botman) {
             $this->provideMenu($botman);
             $this->questionTemplate($botman);
+        });
+
+        $botman->hears('my name is {name}', function($botman, $name) {
+            $botman->userStorage()->save([
+                'name' => $name
+        ]);
+            $botman->reply('Hello '.$name);
+        });
+
+        $botman->hears('say my name', function($botman) {
+            $name = $bot->userStorage()->get('name');
+            $botman->reply('Your name is '.$name);
         });
 
         $botman->hears('ask name', function($botman) {
@@ -99,10 +211,10 @@ class BotManController extends Controller
 
        
 
-        $botman->hears('initial', function($botman) {
-            $this->initailGreeting($botman);
-            $this->askFirstName($botman);
-        });
+        // $botman->hears('initial', function($botman) {
+        //     $this->initailGreeting($botman);
+        //     $this->askFirstName($botman);
+        // });
 
 
 
@@ -259,6 +371,8 @@ class BotManController extends Controller
             $this->say('Great - that is all we need, '.$this->firstname);
         });
     }
+
+    
 
 
 }
