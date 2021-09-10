@@ -75,7 +75,7 @@ class BotManController extends Controller
             'brand' => 'Arcata Fire',
             'price' => '$56.00',
             'thcContent' => 'THC 73.29% CBD 0.01%*',
-            'productType' => 'Live Sauce Cartridge',
+            'productType' => 'Concentrates',
             'strainType' => 'Indica',
             'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/2dadee70-5e3d-4f44-b988-ee89606347ea.jpg',
             'description' => 'A lovely dessert strain, flavors of dark chocolate wafer and mint chip on the inhale, exhale to a gassy and sweet scent of the pine.'
@@ -132,85 +132,50 @@ class BotManController extends Controller
             $botman->reply("Fantastic, I'm here to help if you need anything!");
         });
 
-        $botman->hears('card', function($botman) {
+        $botman->hears('flower', function($botman) {
             foreach($this->products as $product) {
+                if($product['productType'] === 'Flower') {
+                    $botman->reply($this->showCard($product));
 
-            $botman->reply("
-            <style>
-            /* Tooltip container */
-            .tooltip {
-            position: relative;
-            display: inline-block;
-            border: none;
-            }
+                };
+            };
+            $this->backToInventoryQuestion($botman);
 
-            /* Tooltip text */
-            .tooltip .tooltiptext {
-                opacity: 0;
-            transition: opacity 1s;
-            visibility: hidden;
-            width: 120px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            text-align: center;
-            padding: 5px 0;
-            border-radius: 6px;
-            line-height: 1.5rem;
+        });
 
-            
-            /* Position the tooltip text - see examples below! */
-            position: absolute;
-            z-index: 1;
-            }
 
-            /* Show the tooltip text when you mouse over the tooltip container */
-            .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-            }
-            </style>
-            <div>
-                <div style='
-                        height: max-content;
-                        width: 175px;
-                        display: flex;
-                        flex-direction: column;
-                        padding: 10px;
-                        background: white;
-                        border-radius: 3px;
-                        margin: 0px 10px;
-                        box-shadow: rgba(50, 50, 93, 0.25) 0px 10px 35px -20px, rgba(0, 0, 0, 0.3) 0px 10px 25px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
-                        padding: 20px;
-                    '>
-                    <div class='tooltip' style='border-radius: 3px; box-shadow: 0px 0px 10px lightgrey'>
-                        <img style='width: 100%; height: 100%; border-radius: 3px' src=".$product['image']." />
-                        <span class='tooltiptext'>".$product['description']."</span>
-                    </div>
-                    <div style='
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: center;
-                            align-items: center;
-                        '>
-                        <h3 style='text-transform: uppercase; text-align: center;'>
-                            ".$product['name']."
-                        </h3>
-                        <span style='text-transform: uppercase; padding: 7px'>".$product['brand']."</span
-                        >
-                        <span style='text-transform: uppercase; padding: 7px'
-                            >".$product['productType']."</span
-                        >
-                        <span style='text-transform: uppercase; padding: 7px'
-                            >".$product['strainType']."</span
-                        >
-                        <span style='text-shadow: 1px 1px 2px grey; padding: 7px; text-align: center;'
-                            >".$product['thcContent']."</span
-                        >
-                        <span style='padding: 7px'>".$product['price']."</span>
-                    </div>
-                </div>
-            </div>
-            ");}
+        $botman->hears('concentrates', function($botman) {
+            foreach($this->products as $product) {
+                if($product['productType'] === 'Concentrates') {
+                    $botman->reply($this->showCard($product));
+
+                };
+            };
+            $this->backToInventoryQuestion($botman);
+
+        });
+
+
+
+        $botman->hears('edibles', function($botman) {
+            foreach($this->products as $product) {
+                if($product['productType'] === 'Edible') {
+                    $botman->reply($this->showCard($product));
+                };
+            };
+            $this->backToInventoryQuestion($botman);
+
+        });
+
+
+
+        
+    /**
+     * HTML template for sending cards based on invenory data
+     */
+
+        $botman->hears('card', function($botman) {
+            $botman->reply($this->showCards($this->products));
             $this->anythingElseQuestion($botman);
 
             });
@@ -252,10 +217,10 @@ class BotManController extends Controller
         //     $bot->startConversation(new OnboardingConversation);
         // });
 
-        $botman->hears('specials', function($botman) {
-            $this->provideSpecials($botman);
-            $this->questionTemplate($botman);
-        });
+        // $botman->hears('specials', function($botman) {
+        //     $this->provideSpecials($botman);
+        //     $this->questionTemplate($botman);
+        // });
 
         $botman->hears('menu', function($botman) {
             $this->provideMenu($botman);
@@ -294,6 +259,10 @@ class BotManController extends Controller
             $this->questionTemplateIntial($botman);
         });
 
+        $botman->hears('specials', function($botman) {
+            $this->specialsQuestionTemplate($botman);
+        });
+
        
 
         // $botman->hears('initial', function($botman) {
@@ -325,11 +294,31 @@ class BotManController extends Controller
             $botman->reply($question);
     }
 
+    /**
+     * 
+     * function for follow up anything else questions
+    */
+
     public function anythingElseQuestion($botman) {
         $question = Question::create('Anything else I can help you with?')
             ->callbackId('anything_else_questions')
             ->addButtons([
                 Button::create('Yes')->value('buttons'),
+                Button::create('No')->value('anything'),
+            ]);
+        $botman->reply($question);
+    }
+
+    /**
+     * 
+     * function for viewing more specials up anything else questions
+    */
+
+    public function backToInventoryQuestion($botman) {
+        $question = Question::create('Would you like to view more products?')
+            ->callbackId('more_product_questions')
+            ->addButtons([
+                Button::create('Yes')->value('specials'),
                 Button::create('No')->value('done'),
             ]);
         $botman->reply($question);
@@ -370,6 +359,24 @@ class BotManController extends Controller
             ]);
             $botman->reply($question);
     }
+
+    
+    /**
+     * Creating the Buttons to navigate ypes of specials.
+     */
+     public function specialsQuestionTemplate($botman)
+    {
+        $question = Question::create('What type of specials are you looking for?')
+            ->callbackId('specials_types')
+            ->addButtons([
+                Button::create('Flower')->value('flower'),
+                Button::create('Concentrates')->value('concentrates'),
+                Button::create('Edibles')->value('edibles'),
+                Button::create('All')->value('card'),
+            ]);
+            $botman->reply($question);
+    }
+
    
     /**
      * Place your BotMan logic here.
@@ -404,7 +411,6 @@ class BotManController extends Controller
      */
     public function provideHours($botman)
     {
-        $botman->typesAndWaits(1);
         $botman->reply('We are open daily '.$this->store['daysOpen'].' from '.$this->store['hours'].' We are closed '.$this->store['daysClosed']);
         $botman->reply('test');
     }
@@ -424,7 +430,6 @@ class BotManController extends Controller
      */
     public function provideSpecials($botman)
     {
-        $botman->typesAndWaits(1);
         $botman->reply('These are our specials');
     }
 
@@ -465,6 +470,105 @@ class BotManController extends Controller
 
             $this->say('Great - that is all we need, '.$this->firstname);
         });
+    }
+
+    public function showCard($product)
+    {
+        return "
+            <style>
+            /* Tooltip container */
+            .tooltip {
+            position: relative;
+            display: inline-block;
+            border: none;
+            }
+
+            /* Tooltip text */
+            .tooltip .tooltiptext {
+                opacity: 0;
+            transition: opacity 1s;
+            visibility: hidden;
+            width: 120px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            text-align: center;
+            padding: 5px 0;
+            border-radius: 6px;
+            line-height: 1.5rem;
+
+            
+            /* Position the tooltip text - see examples below! */
+            position: absolute;
+            z-index: 1;
+            }
+
+            /* Show the tooltip text when you mouse over the tooltip container */
+            .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            }
+            </style>
+            <div>
+                <div style='
+                        height: 100%;
+                        width: 175px;
+                        display: flex;
+                        flex-direction: column;
+                        padding: 10px;
+                        background: white;
+                        border-radius: 3px;
+                        margin: 0px 10px;
+                        box-shadow: rgba(50, 50, 93, 0.25) 0px 10px 35px -20px, rgba(0, 0, 0, 0.3) 0px 10px 25px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+                        padding: 20px;
+                    '>
+                    <div class='tooltip' style='border-radius: 3px; box-shadow: 0px 0px 10px lightgrey'>
+                        <img style='width: 100%; height: 100%; border-radius: 3px' src=".$product['image']." />
+                        <span class='tooltiptext'>".$product['description']."</span>
+                    </div>
+                    <div style='
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                        '>
+                        <h3 style='text-transform: uppercase; text-align: center;'>
+                            ".$product['name']."
+                        </h3>
+                        <span style='text-transform: uppercase; padding: 3px; text-align: center;'>".$product['brand']."</span
+                        >
+                        <span style='text-transform: uppercase; padding: 3px'
+                            >".$product['productType']."</span
+                        >
+                        <span style='text-transform: uppercase; padding: 3px'
+                            >".$product['strainType']."</span
+                        >
+                        <span style='text-shadow: 1px 1px 2px grey; padding: 3px; text-align: center;'
+                            >".$product['thcContent']."</span
+                        >
+                        <span style='padding: 3px'>".$product['price']."</span>
+                    </div>
+                </div>
+            </div>
+            ";
+    }
+
+    /**
+     * 
+     * 
+     * function to show multiple cards as carousel
+     * research appending also
+    */
+
+    public function showCards($products)
+    {
+        $html = "<div style='display: flex; overflow: scroll;'>";
+            foreach($products as $product) {
+                $html .= $this->showCard($product);
+            }
+        $html .= "</div>";
+
+        return $html;
+        
     }
 
     
