@@ -67,7 +67,8 @@ class BotManController extends Controller
             'thcContent' => 'THC 26.42% CBD 0.04%*',
             'productType' => 'Flower',
             'strainType' => 'Sativa',
-            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/83ef1fea-2f5c-4d4d-8ac8-da6fd2b66b2f.jpg'
+            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/83ef1fea-2f5c-4d4d-8ac8-da6fd2b66b2f.jpg',
+            'description' => 'Lemonatti is a hybrid marijuana strain made by crossing Gelonade and Biscotti.'
         ),
         'productTwo' => array(
             'name' => 'Cookies',
@@ -76,7 +77,8 @@ class BotManController extends Controller
             'thcContent' => 'THC 73.29% CBD 0.01%*',
             'productType' => 'Live Sauce Cartridge',
             'strainType' => 'Indica',
-            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/2dadee70-5e3d-4f44-b988-ee89606347ea.jpg'
+            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/2dadee70-5e3d-4f44-b988-ee89606347ea.jpg',
+            'description' => 'A lovely dessert strain, flavors of dark chocolate wafer and mint chip on the inhale, exhale to a gassy and sweet scent of the pine.'
         ),
         'productThree' => array(
             'name' => 'Wild Cherry - Excite [20pk] (100mg)',
@@ -85,7 +87,8 @@ class BotManController extends Controller
             'thcContent' => '100mg 20pk*',
             'productType' => 'Edible',
             'strainType' => 'Sativa',
-            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/ba53c492-e206-4fb3-bda7-b29cd3df8b1f.jpg'
+            'image' => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/ba53c492-e206-4fb3-bda7-b29cd3df8b1f.jpg',
+            'description' => 'Get the rooftop party started with our Wild Cherry gummies. The invigorating blend of sativa-like terpenes with sweet, fruity notes of tart cherry will have you dancing all night long.'
         )
     );
 
@@ -121,14 +124,96 @@ class BotManController extends Controller
             $this->provideFeedback($botman);            
         });
 
-        $botman->hears('card', function($botman) {
-            $botman->reply("
-                <div>".foreach($this->products as $product) {
-                    "<div>Hello</div>"
-                }."</div>
-            ")
-
+        $botman->hears('anything', function($botman) {
+            $this->anythingElseQuestion($botman);
         });
+
+        $botman->hears('done', function($botman) {
+            $botman->reply("Fantastic, I'm here to help if you need anything!");
+        });
+
+        $botman->hears('card', function($botman) {
+            foreach($this->products as $product) {
+
+            $botman->reply("
+            <style>
+            /* Tooltip container */
+            .tooltip {
+            position: relative;
+            display: inline-block;
+            border: none;
+            }
+
+            /* Tooltip text */
+            .tooltip .tooltiptext {
+                opacity: 0;
+            transition: opacity 1s;
+            visibility: hidden;
+            width: 120px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            text-align: center;
+            padding: 5px 0;
+            border-radius: 6px;
+            line-height: 1.5rem;
+
+            
+            /* Position the tooltip text - see examples below! */
+            position: absolute;
+            z-index: 1;
+            }
+
+            /* Show the tooltip text when you mouse over the tooltip container */
+            .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            }
+            </style>
+            <div>
+                <div style='
+                        height: max-content;
+                        width: 175px;
+                        display: flex;
+                        flex-direction: column;
+                        padding: 10px;
+                        background: white;
+                        border-radius: 3px;
+                        margin: 0px 10px;
+                        box-shadow: rgba(50, 50, 93, 0.25) 0px 10px 35px -20px, rgba(0, 0, 0, 0.3) 0px 10px 25px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+                        padding: 20px;
+                    '>
+                    <div class='tooltip' style='border-radius: 3px; box-shadow: 0px 0px 10px lightgrey'>
+                        <img style='width: 100%; height: 100%; border-radius: 3px' src=".$product['image']." />
+                        <span class='tooltiptext'>".$product['description']."</span>
+                    </div>
+                    <div style='
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                        '>
+                        <h3 style='text-transform: uppercase; text-align: center;'>
+                            ".$product['name']."
+                        </h3>
+                        <span style='text-transform: uppercase; padding: 7px'>".$product['brand']."</span
+                        >
+                        <span style='text-transform: uppercase; padding: 7px'
+                            >".$product['productType']."</span
+                        >
+                        <span style='text-transform: uppercase; padding: 7px'
+                            >".$product['strainType']."</span
+                        >
+                        <span style='text-shadow: 1px 1px 2px grey; padding: 7px; text-align: center;'
+                            >".$product['thcContent']."</span
+                        >
+                        <span style='padding: 7px'>".$product['price']."</span>
+                    </div>
+                </div>
+            </div>
+            ");}
+            $this->anythingElseQuestion($botman);
+
+            });
 
         $botman->hears('initial', function ($botman) {
             $this->initailGreeting($botman);
@@ -234,10 +319,20 @@ class BotManController extends Controller
                 Button::create('Location')->value('location'),
                 Button::create('Feedback')->value('feedback'),
                 Button::create('Specials')->value('specials'),
-                Button::create('Menu')->value('menu'),
+                Button::create('Menu')->value('card'),
 
             ]);
             $botman->reply($question);
+    }
+
+    public function anythingElseQuestion($botman) {
+        $question = Question::create('Anything else I can help you with?')
+            ->callbackId('anything_else_questions')
+            ->addButtons([
+                Button::create('Yes')->value('buttons'),
+                Button::create('No')->value('done'),
+            ]);
+        $botman->reply($question);
     }
 
         /**

@@ -589,7 +589,7 @@
     <script>
         var botmanWidget = {
             chatServer: 'http://127.0.0.1:8000/botman',
-            aboutText: 'this bot is testing controllers',
+            // aboutText: 'this bot is testing controllers',
             introMessage: "Welcome To Buzzbot",
             frameEndpoint: 'http://127.0.0.1:8000/chatframe'   
         };
