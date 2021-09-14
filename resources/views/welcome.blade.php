@@ -569,7 +569,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>How to install Botman Chatbot in Laravel? - Tutsmake.org</title>
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/css/chat.css">
+        {{-- <link rel="stylesheet" type="text/css" href="/css/chat.css"> --}}
     </head>
 
     <body onload="setTimeout(triggerBot, 1000)">
@@ -584,8 +584,8 @@
         <script src="{{ asset('js/app.js') }}" defer></script> --}}
     </body>
 
-    <link rel="stylesheet" type="text/css"
-        href="/Users/andrewcarrigan/Desktop/ripemetrics/botman_blog_react/public/css/chat.css">
+    {{-- <link rel="stylesheet" type="text/css"
+        href="/Users/andrewcarrigan/Desktop/ripemetrics/botman_blog_react/public/css/chat.css"> --}}
     <script>
         var botmanWidget = {
             chatServer: 'http://127.0.0.1:8000/botman',
@@ -597,7 +597,7 @@
     <script>
         const triggerBot = function() {
             console.log("script is running")
-        botmanChatWidget.whisper('initial');
+        botmanChatWidget.whisper('card');
        }
 
     </script>

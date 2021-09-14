@@ -29,6 +29,10 @@ class BotManController extends Controller
     ];
 
 
+
+
+
+
     // protected $productOne = [
     //     'name' => 'Lemonatti',
     //     'brand' => 'Connected Cannabis Co',
@@ -94,34 +98,44 @@ class BotManController extends Controller
 
 
 
-  
+
 
     protected $firstname;
     protected $email;
     protected $phone;
 
-    
 
-    
-    
+
+
+
 
      public function handle()
     {
         $botman = app('botman');
-   
+
+        $dialogflow = \BotMan\Middleware\DialogFlow\V2\DialogFlow::create('en');
+        $botman->middleware->received($dialogflow);
+        $botman->hears('snoopy', function ($botman) {
+        $extras = $botman->getMessage()->getExtras();
+        Log::info($extras);
+        $botman->reply("Hello Snoopy");
+        });
+
+
+
         // $botman->hears('{message}', function($botman, $message) {
-   
+
         //     if ($message == 'hi') {
         //         $this->askName($botman);
         //     }else{
         //         $botman->reply("write 'hi' for testing...");
         //     }
-   
+
         // });
 
 
         $botman->hears('feedback', function($botman) {
-            $this->provideFeedback($botman);            
+            $this->provideFeedback($botman);
         });
 
         $botman->hears('anything', function($botman) {
@@ -169,7 +183,7 @@ class BotManController extends Controller
 
 
 
-        
+
     /**
      * HTML template for sending cards based on invenory data
      */
@@ -196,15 +210,15 @@ class BotManController extends Controller
                 });
 
             });
-           
 
-            
+
+
         });
 
         $botman->hears('hours', function($botman) {
             $this->provideHours($botman);
             $this->questionTemplate($botman);
-            
+
         });
 
         $botman->hears('Location', function($botman) {
@@ -244,17 +258,17 @@ class BotManController extends Controller
             // $this->askEmail($botman);
 
             // $botman->reply('hello friend');
-            
+
         });
 
         $botman->hears('template', function($botman) {
             $this->template($botman);
-            
+
         });
 
 
         $botman->hears('buttons', function($botman) {
-          
+
 
             $this->questionTemplateIntial($botman);
         });
@@ -263,7 +277,7 @@ class BotManController extends Controller
             $this->specialsQuestionTemplate($botman);
         });
 
-       
+
 
         // $botman->hears('initial', function($botman) {
         //     $this->initailGreeting($botman);
@@ -295,7 +309,7 @@ class BotManController extends Controller
     }
 
     /**
-     * 
+     *
      * function for follow up anything else questions
     */
 
@@ -310,7 +324,7 @@ class BotManController extends Controller
     }
 
     /**
-     * 
+     *
      * function for viewing more specials up anything else questions
     */
 
@@ -334,7 +348,7 @@ class BotManController extends Controller
     //         ->addButtons([
     //             Button::create('Sure Does!')->value('verified_feedback_response'),
     //             Button::create('Location')->value('unverified_feedback_response'),
-               
+
 
     //         ]);
     //         $botman->reply($question);
@@ -360,7 +374,7 @@ class BotManController extends Controller
             $botman->reply($question);
     }
 
-    
+
     /**
      * Creating the Buttons to navigate ypes of specials.
      */
@@ -377,20 +391,20 @@ class BotManController extends Controller
             $botman->reply($question);
     }
 
-   
+
     /**
      * Place your BotMan logic here.
      */
     public function askName($botman)
     {
         $botman->ask('Hello! What is your Name?', function(Answer $answer) {
-   
+
             $name = $answer->getText();
             $this->say('Nice to meet you '.$name);
         });
     }
 
-   
+
 
 
 
@@ -418,7 +432,7 @@ class BotManController extends Controller
     /**
      * Botman function to provide store location
      */
-    public function provideLocation($botman) 
+    public function provideLocation($botman)
     {
         $botman->reply('We are located at '.$this->store['location']);
         // $botman->reply('test');
@@ -459,7 +473,7 @@ class BotManController extends Controller
 
             $this->say('Nice to meet you '.$this->firstname);
             // Log::info($this->store);
-            
+
         });
     }
 
@@ -471,6 +485,11 @@ class BotManController extends Controller
             $this->say('Great - that is all we need, '.$this->firstname);
         });
     }
+
+    /**
+     * template function for the HTML to show a single
+     *
+    */
 
     public function showCard($product)
     {
@@ -496,7 +515,7 @@ class BotManController extends Controller
             border-radius: 6px;
             line-height: 1.5rem;
 
-            
+
             /* Position the tooltip text - see examples below! */
             position: absolute;
             z-index: 1;
@@ -508,10 +527,9 @@ class BotManController extends Controller
             opacity: 1;
             }
             </style>
-            <div>
                 <div style='
-                        height: 100%;
-                        width: 175px;
+                        height: 350px;
+                        width: fit-content;
                         display: flex;
                         flex-direction: column;
                         padding: 10px;
@@ -519,10 +537,9 @@ class BotManController extends Controller
                         border-radius: 3px;
                         margin: 0px 10px;
                         box-shadow: rgba(50, 50, 93, 0.25) 0px 10px 35px -20px, rgba(0, 0, 0, 0.3) 0px 10px 25px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
-                        padding: 20px;
                     '>
                     <div class='tooltip' style='border-radius: 3px; box-shadow: 0px 0px 10px lightgrey'>
-                        <img style='width: 100%; height: 100%; border-radius: 3px' src=".$product['image']." />
+                        <img style='width: 150px; height: 150px; border-radius: 3px' src=".$product['image']." />
                         <span class='tooltiptext'>".$product['description']."</span>
                     </div>
                     <div style='
@@ -545,33 +562,32 @@ class BotManController extends Controller
                         <span style='text-shadow: 1px 1px 2px grey; padding: 3px; text-align: center;'
                             >".$product['thcContent']."</span
                         >
-                        <span style='padding: 3px'>".$product['price']."</span>
+                        <span style='padding: 0px'>".$product['price']."</span>
                     </div>
                 </div>
-            </div>
             ";
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * function to show multiple cards as carousel
      * research appending also
     */
 
     public function showCards($products)
     {
-        $html = "<div style='display: flex; overflow: scroll;'>";
+        $html = "<div style='display: flex; overflow-x: scroll; overflow-y: visible;height: max-content;'>";
             foreach($products as $product) {
                 $html .= $this->showCard($product);
             }
         $html .= "</div>";
 
         return $html;
-        
+
     }
 
-    
+
 
 
 }
