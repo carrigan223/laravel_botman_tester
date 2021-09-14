@@ -597,7 +597,7 @@
     <script>
         const triggerBot = function() {
             console.log("script is running")
-        botmanChatWidget.whisper('card');
+        botmanChatWidget.whisper('buttons');
        }
 
     </script>
