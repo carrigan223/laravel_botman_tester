@@ -96,7 +96,7 @@ class BotManController extends Controller
         $dialogflow = \BotMan\Middleware\DialogFlow\V2\DialogFlow::create('en');
         $botman->middleware->received($dialogflow);
         $botman->hears('(.*)', function ($botman) {
-            $extras    = $botman->getMessage()->getExtras();
+            $extras = $botman->getMessage()->getExtras();
             $dfMessage = $botman->getMessage();
             // Log::info(print_r($dfMessage, true));
             $botman->reply($extras['apiReply']);
@@ -211,7 +211,7 @@ class BotManController extends Controller
         });
 
         $botman->hears('say my name', function ($botman) {
-            $name = $bot->userStorage()->get('name');
+            $name = $botman->userStorage()->get('name');
             $botman->reply('Your name is ' . $name);
         });
 
