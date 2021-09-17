@@ -11,434 +11,474 @@ use Illuminate\Support\Facades\Log;
 
 class BotManController extends Controller
 {
-    /**
-     * Botman conversation logic
-     */
-
-     /** mockup of a client store object
-      * temporary, will be replaced with dynamic
-      * client data
-      *
-      */
-
-    protected $_store = [
-        'location'   => '123 abc way New York, NY 10075',
-        'hours'      => '9AM - 5PM',
-        'daysOpen'   => 'Mon - Sat',
-        'daysClosed' => 'Sat',
-    ];
-
-
-    /** mockup of a client products, these are
-      * temporary, will be replaced with dynamic
-      * client data
-      *
-      */
-
-    protected $_products = array(
-        'productOne'   => array(
-            'name'        => 'Lemonatti',
-            'brand'       => 'Connected Cannabis Co',
-            'price'       => '$29.99',
-            'thcContent'  => 'THC 26.42% CBD 0.04%*',
-            'productType' => 'Flower',
-            'strainType'  => 'Sativa',
-            'image'       => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/83ef1fea-2f5c-4d4d-8ac8-da6fd2b66b2f.jpg',
-            'description' => 'Lemonatti is a hybrid marijuana strain made by crossing Gelonade and Biscotti.',
-        ),
-        'productTwo'   => array(
-            'name'        => 'Cookies',
-            'brand'       => 'Arcata Fire',
-            'price'       => '$56.00',
-            'thcContent'  => 'THC 73.29% CBD 0.01%*',
-            'productType' => 'Concentrates',
-            'strainType'  => 'Indica',
-            'image'       => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/2dadee70-5e3d-4f44-b988-ee89606347ea.jpg',
-            'description' => 'A lovely dessert strain, flavors of dark chocolate wafer and mint chip on the inhale, exhale to a gassy and sweet scent of the pine.',
-        ),
-        'productThree' => array(
-            'name'        => 'Wild Cherry - Excite [20pk] (100mg)',
-            'brand'       => 'Kiva Confections',
-            'price'       => '$18.00',
-            'thcContent'  => '100mg 20pk*',
-            'productType' => 'Edible',
-            'strainType'  => 'Sativa',
-            'image'       => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/ba53c492-e206-4fb3-bda7-b29cd3df8b1f.jpg',
-            'description' => 'Get the rooftop party started with our Wild Cherry gummies. The invigorating blend of sativa-like terpenes with sweet, fruity notes of tart cherry will have you dancing all night long.',
-        ),
-    );
-
-    /**
-     * variables to hold various user information
-     */
-
-    protected $_firstname;
-    protected $_email;
-    protected $_phone;
-
-    /**
-     * this is the main function handling our incoming
-     * post to the `/botman` route
-     */
-
-    public function handle()
-    {
-        $botman = app('botman');
-
-        /**
-         *  We are bringing in dilogflow middleware
-         * then passing the message along to dialogFlow
-         * currently we are passing everything along to
-         * the middleware, we need to encapsulate the `hears`
-         * commands in an if block then in the else hit the middle ware
-         */
-
-        $dialogflow = \BotMan\Middleware\DialogFlow\V2\DialogFlow::create('en');
-        $botman->middleware->received($dialogflow);
-        $botman->hears('(.*)', function ($botman) {
-            $extras = $botman->getMessage()->getExtras();
-            $dfMessage = $botman->getMessage();
-            // Log::info(print_r($dfMessage, true));
-            $botman->reply($extras['apiReply']);
-        });
-
-        // $botman->hears('{message}', function($botman, $message) {
-
-        //     if ($message == 'hi') {
-        //         $this->askName($botman);
-        //     }else{
-        //         $botman->reply("write 'hi' for testing...");
-        //     }
-
-        // });
-
-        /**
-         * the list of commands for botman to handle without
-         * passing along to dialogflow
-         */
-
-        $botman->hears('feedback', function ($botman) {
-            $this->provideFeedback($botman);
-        });
-
-        $botman->hears('anything', function ($botman) {
-            $this->anythingElseQuestion($botman);
-        });
-
-        $botman->hears('done', function ($botman) {
-            $botman->reply("Fantastic, I'm here to help if you need anything!");
-        });
-
-        $botman->hears('flower', function ($botman) {
-            foreach ($this->_products as $product) {
-                if ($product['productType'] === 'Flower') {
-                    $botman->reply($this->showCard($product));
-
-                };
-            };
-            $this->backToInventoryQuestion($botman);
-
-        });
-
-        $botman->hears('concentrates', function ($botman) {
-            foreach ($this->_products as $product) {
-                if ($product['productType'] === 'Concentrates') {
-                    $botman->reply($this->showCard($product));
-
-                };
-            };
-            $this->backToInventoryQuestion($botman);
-
-        });
-
-        $botman->hears('edibles', function ($botman) {
-            foreach ($this->_products as $product) {
-                if ($product['productType'] === 'Edible') {
-                    $botman->reply($this->showCard($product));
-                };
-            };
-            $this->backToInventoryQuestion($botman);
-
-        });
-
-        $botman->hears('card', function ($botman) {
-            $botman->reply($this->showCards($this->_products));
-            $this->anythingElseQuestion($botman);
-
-        });
-
-        $botman->hears('initial', function ($botman) {
-            $this->initailGreeting($botman);
-            $botman->ask('what is your name', function ($answer, $conversation) {
-                $this->firstname = $answer->getText();
-                $conversation->say('Nice to meet you ' . $this->firstname);
-                // $this->questionTemplate($botman);
-                $conversation->ask('Also if you could provide me with your Email?', function ($answer, $conversation) {
-                    $this->email = $answer->getText();
-                    $conversation->say('great thank you ' . $this->firstname . ' your email is ' . $this->email);
-                    $conversation->ask('And your phone number please', function ($answer, $conversation) {
-                        $this->phone = $answer->getText();
-                        $conversation->say('great thank you ' . $this->firstname . ' your phone number is ' . $this->phone);
-                    });
-                });
-
-            });
-
-        });
-
-        $botman->hears('hours', function ($botman) {
-            $this->provideHours($botman);
-            $this->questionTemplate($botman);
-
-        });
-
-        $botman->hears('Location', function ($botman) {
-            $this->provideLocation($botman);
-            $this->questionTemplate($botman);
-
-        });
-
-        $botman->hears('menu', function ($botman) {
-            $this->provideMenu($botman);
-            $this->questionTemplate($botman);
-        });
-
-        $botman->hears('my name is {name}', function ($botman, $name) {
-            $botman->userStorage()->save([
-                'name' => $name,
-            ]);
-            $botman->reply('Hello ' . $name);
-        });
-
-        $botman->hears('say my name', function ($botman) {
-            $name = $botman->userStorage()->get('name');
-            $botman->reply('Your name is ' . $name);
-        });
-
-        $botman->hears('ask name', function ($botman) {
-            $this->askFirstName($botman);
-            // $this->askEmail($botman);
-            // $botman->reply('hello friend');
-
-        });
-
-        $botman->hears('template', function ($botman) {
-            $this->template($botman);
-
-        });
-
-        $botman->hears('buttons', function ($botman) {
-
-            $this->questionTemplateIntial($botman);
-        });
-
-        $botman->hears('specials', function ($botman) {
-            $this->specialsQuestionTemplate($botman);
-        });
-
-        // $botman->hears('initial', function($botman) {
-        //     $this->initailGreeting($botman);
-        //     $this->askFirstName($botman);
-        // });
-
-        $botman->listen();
-    }
-
-    /**
-     * Template for initial call to questions.
-     */
-    public function questionTemplateIntial($botman)
-    {
-        $question = Question::create('')
-            ->callbackId('guide_buttons')
-            ->addButtons([
-                Button::create('Hours')->value('hours'),
-                Button::create('Location')->value('location'),
-                Button::create('Feedback')->value('feedback'),
-                Button::create('Specials')->value('specials'),
-                Button::create('Menu')->value('card'),
-
-            ]);
-        $botman->reply($question);
-    }
-
-    /**
-     *
-     * function for follow up anything else questions
-     */
-
-    public function anythingElseQuestion($botman)
-    {
-        $question = Question::create('Anything else I can help you with?')
-            ->callbackId('anything_else_questions')
-            ->addButtons([
-                Button::create('Yes')->value('buttons'),
-                Button::create('No')->value('anything'),
-            ]);
-        $botman->reply($question);
-    }
-
-    /**
-     *
-     * function for viewing more specials up anything else questions
-     */
-
-    public function backToInventoryQuestion($botman)
-    {
-        $question = Question::create('Would you like to view more products?')
-            ->callbackId('more_product_questions')
-            ->addButtons([
-                Button::create('Yes')->value('specials'),
-                Button::create('No')->value('done'),
-            ]);
-        $botman->reply($question);
-    }
-
-
-
-    /**
-     * Template for callback to questions.
-     */
-    public function questionTemplate($botman)
-    {
-        $question = Question::create('What else can I help you with?')
-            ->callbackId('select_time')
-            ->addButtons([
-                Button::create('Hours')->value('hours'),
-                Button::create('Location')->value('location'),
-                Button::create('Feedback')->value('feedback'),
-                Button::create('Specials')->value('specials'),
-                Button::create('Menu')->value('menu'),
-
-            ]);
-        $botman->reply($question);
-    }
-
-    /**
-     * Creating the Buttons to navigate ypes of specials.
-     */
-    public function specialsQuestionTemplate($botman)
-    {
-        $question = Question::create('What type of specials are you looking for?')
-            ->callbackId('specials_types')
-            ->addButtons([
-                Button::create('Flower')->value('flower'),
-                Button::create('Concentrates')->value('concentrates'),
-                Button::create('Edibles')->value('edibles'),
-                Button::create('All')->value('card'),
-            ]);
-        $botman->reply($question);
-    }
-
-    /**
-     * Place your BotMan logic here.
-     */
-    public function askName($botman)
-    {
-        $botman->ask('Hello! What is your Name?', function (Answer $answer) {
-
-            $name = $answer->getText();
-            $this->say('Nice to meet you ' . $name);
-        });
-    }
-
-    /**
-     * Function for capturing feed back from the bot
-     */
-    public function provideFeedback($botman)
-    {
-        $botman->ask('Thank you for taking the time to provide feedback, Please let us know how we did.', function (Answer $answer) {
-            $feedback = $answer->getText();
-            $this->say($feedback);
-        });
-    }
-
-    /**
-     * Botman function to provide _store hours
-     */
-    public function provideHours($botman)
-    {
-        $botman->reply('We are open daily ' . $this->_store['daysOpen'] . ' from ' . $this->_store['hours'] . ' We are closed ' . $this->_store['daysClosed']);
-        $botman->reply('test');
-    }
-
-    /**
-     * Botman function to provide _store location
-     */
-    public function provideLocation($botman)
-    {
-        $botman->reply('We are located at ' . $this->_store['location']);
-        // $botman->reply('test');
-
-    }
-
-    /**
-     * Botman function to privide list of specials
-     */
-    public function provideSpecials($botman)
-    {
-        $botman->reply('These are our specials');
-    }
-
-    /**
-     * Botman response to provide menu info
-     */
-    public function provideMenu($botman)
-    {
-        $botman->typesAndWaits(1);
-        $botman->reply('this is the menu');
-    }
-
-    public function initailGreeting($botman)
-    {
-        $botman->typesAndWaits(1);
-        $botman->reply('Im here to start to make your experience with Buzz a little easier');
-        $botman->reply('Lets start with some of your info so I can better help you');
-
-    }
-
-    /**
-     * function `askFirstName` takes in `$botman`
-     * to then use the `$botman` ask method to
-     * ask a question and collect the answer
-     */
-
-    public function askFirstname($botman)
-    {
-        $botman->ask('Hello! What is your firstname?', function (Answer $answer) {
-            // Save result
-            $this->firstname = $answer->getText();
-
-            $this->say('Nice to meet you ' . $this->firstname);
-            // Log::info($this->_store);
-
-        });
-    }
-
-    /**
-     * function `askEmail` takes in `$botman`
-     * to then use the `$botman` ask method to
-     * ask a question and collect the answer
-     */
-
-    public function askEmail($botman)
-    {
-        $botman->ask('One more thing - what is your email?', function (Answer $answer) {
-            // Save result
-            $this->email = $answer->getText();
-
-            $this->say('Great - that is all we need, ' . $this->firstname);
-        });
-    }
-
-    /**
-     * template function for the HTML to show a single
-     * card
-     */
-
-    public function showCard($product)
-    {
-        return "
+ /**
+  * Botman conversation logic
+  */
+
+ /** mockup of a client store object
+  * temporary, will be replaced with dynamic
+  * client data
+  *
+  */
+
+ protected $_store = [
+  'location'   => '123 abc way New York, NY 10075',
+  'hours'      => '9AM - 5PM',
+  'daysOpen'   => 'Mon - Sat',
+  'daysClosed' => 'Sat',
+ ];
+
+ /** mockup of a client products, these are
+  * temporary, will be replaced with dynamic
+  * client data
+  *
+  */
+
+ protected $_products = array(
+  'productOne'   => array(
+   'name'        => 'Lemonatti',
+   'brand'       => 'Connected Cannabis Co',
+   'price'       => '$29.99',
+   'thcContent'  => 'THC 26.42% CBD 0.04%*',
+   'productType' => 'Flower',
+   'strainType'  => 'Sativa',
+   'image'       => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/83ef1fea-2f5c-4d4d-8ac8-da6fd2b66b2f.jpg',
+   'description' => 'Lemonatti is a hybrid marijuana strain made by crossing Gelonade and Biscotti.',
+  ),
+  'productTwo'   => array(
+   'name'        => 'Cookies',
+   'brand'       => 'Arcata Fire',
+   'price'       => '$56.00',
+   'thcContent'  => 'THC 73.29% CBD 0.01%*',
+   'productType' => 'Concentrates',
+   'strainType'  => 'Indica',
+   'image'       => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/2dadee70-5e3d-4f44-b988-ee89606347ea.jpg',
+   'description' => 'A lovely dessert strain, flavors of dark chocolate wafer and mint chip on the inhale, exhale to a gassy and sweet scent of the pine.',
+  ),
+  'productThree' => array(
+   'name'        => 'Wild Cherry - Excite [20pk] (100mg)',
+   'brand'       => 'Kiva Confections',
+   'price'       => '$18.00',
+   'thcContent'  => '100mg 20pk*',
+   'productType' => 'Edible',
+   'strainType'  => 'Sativa',
+   'image'       => 'https://uploads.iheartjane.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,metadata=none/uploads/ba53c492-e206-4fb3-bda7-b29cd3df8b1f.jpg',
+   'description' => 'Get the rooftop party started with our Wild Cherry gummies. The invigorating blend of sativa-like terpenes with sweet, fruity notes of tart cherry will have you dancing all night long.',
+  ),
+ );
+
+ /**
+  * variables to hold various user information
+  */
+
+ protected $_firstname;
+ protected $_email;
+ protected $_phone;
+
+ /**
+  * this is the main function handling our incoming
+  * post to the `/botman` route
+  */
+
+ public function handle()
+ {
+  $botman = app('botman');
+
+  /**
+   *  We are bringing in dilogflow middleware
+   * then passing the message along to dialogFlow
+   * currently we are passing everything along to
+   * the middleware, we need to encapsulate the `hears`
+   * commands in an if block then in the else hit the middle ware
+   */
+
+  $dialogflow = \BotMan\Middleware\DialogFlow\V2\DialogFlow::create('en');
+//   $botman->middleware->received($dialogflow);
+  // $botman->hears('(.*)', function ($botman) {
+  //     $extras = $botman->getMessage()->getExtras();
+  //     $dfMessage = $botman->getMessage();
+  //     // Log::info(print_r($dfMessage, true));
+  //     $botman->reply($extras['apiReply']);
+  // });
+
+  /**
+   * This if block is taking our message and handling it if the controller is set up to otherwise
+   * we are receiving dialogFlow answer
+   */
+
+  $botman->hears('{message}', function ($botman, $message) {
+
+   if ($message == 'buttons') {
+    $this->questionTemplateIntial($botman);
+   } elseif ($message == 'card') {
+    $botman->reply($this->showCards($this->_products));
+    $this->anythingElseQuestion($botman);
+   } elseif ($message == 'specials') {
+    $this->specialsQuestionTemplate($botman);
+   } elseif ($message == 'location') {
+    $this->provideLocation($botman);
+    $this->questionTemplate($botman);
+   } elseif ($message == 'hours') {
+    $this->provideHours($botman);
+    $this->questionTemplate($botman);
+   } elseif ($message == 'edibles') {
+    foreach ($this->_products as $product) {
+     if ($product['productType'] === 'Edibles') {
+      $botman->reply($this->showCard($product));
+
+     };
+    };
+    $this->backToInventoryQuestion($botman);
+   } elseif ($message == 'concentrates') {
+    foreach ($this->_products as $product) {
+     if ($product['productType'] === 'Concentrates') {
+      $botman->reply($this->showCard($product));
+
+     };
+    };
+    $this->backToInventoryQuestion($botman);
+   } elseif ($message == 'flower') {
+    foreach ($this->_products as $product) {
+     if ($product['productType'] === 'Flower') {
+      $botman->reply($this->showCard($product));
+
+     };
+    };
+    $this->backToInventoryQuestion($botman);
+   } elseif ($message == 'done') {
+    $botman->reply("Fantastic, I'm here to help if you need anything!");
+   } else {
+    $extras = $botman->getMessage()->getExtras();
+    $botman->reply($extras['apiReply']);
+   }
+
+  });
+
+  /**
+   * the list of commands for botman to handle without
+   * passing along to dialogflow
+   */
+
+  // $botman->hears('feedback', function ($botman) {
+  //     $this->provideFeedback($botman);
+  // });
+
+  // $botman->hears('anything', function ($botman) {
+  //     $this->anythingElseQuestion($botman);
+  // });
+
+  // $botman->hears('done', function ($botman) {
+  //     $botman->reply("Fantastic, I'm here to help if you need anything!");
+  // });
+
+  // $botman->hears('flower', function ($botman) {
+  //     foreach ($this->_products as $product) {
+  //         if ($product['productType'] === 'Flower') {
+  //             $botman->reply($this->showCard($product));
+
+  //         };
+  //     };
+  //     $this->backToInventoryQuestion($botman);
+
+  // });
+
+  // $botman->hears('concentrates', function ($botman) {
+  //     foreach ($this->_products as $product) {
+  //         if ($product['productType'] === 'Concentrates') {
+  //             $botman->reply($this->showCard($product));
+
+  //         };
+  //     };
+  //     $this->backToInventoryQuestion($botman);
+
+  // });
+
+  // $botman->hears('edibles', function ($botman) {
+  //     foreach ($this->_products as $product) {
+  //         if ($product['productType'] === 'Edible') {
+  //             $botman->reply($this->showCard($product));
+  //         };
+  //     };
+  //     $this->backToInventoryQuestion($botman);
+
+  // });
+
+  // $botman->hears('card', function ($botman) {
+  //     $botman->reply($this->showCards($this->_products));
+  //     $this->anythingElseQuestion($botman);
+
+  // });
+
+  // $botman->hears('initial', function ($botman) {
+  //     $this->initailGreeting($botman);
+  //     $botman->ask('what is your name', function ($answer, $conversation) {
+  //         $this->firstname = $answer->getText();
+  //         $conversation->say('Nice to meet you ' . $this->firstname);
+  //         // $this->questionTemplate($botman);
+  //         $conversation->ask('Also if you could provide me with your Email?', function ($answer, $conversation) {
+  //             $this->email = $answer->getText();
+  //             $conversation->say('great thank you ' . $this->firstname . ' your email is ' . $this->email);
+  //             $conversation->ask('And your phone number please', function ($answer, $conversation) {
+  //                 $this->phone = $answer->getText();
+  //                 $conversation->say('great thank you ' . $this->firstname . ' your phone number is ' . $this->phone);
+  //             });
+  //         });
+
+  //     });
+
+  // });
+
+  // $botman->hears('hours', function ($botman) {
+  //     $this->provideHours($botman);
+  //     $this->questionTemplate($botman);
+
+  // });
+
+  // $botman->hears('Location', function ($botman) {
+  //     $this->provideLocation($botman);
+  //     $this->questionTemplate($botman);
+
+  // });
+
+  // $botman->hears('menu', function ($botman) {
+  //     $this->provideMenu($botman);
+  //     $this->questionTemplate($botman);
+  // });
+
+  // $botman->hears('my name is {name}', function ($botman, $name) {
+  //     $botman->userStorage()->save([
+  //         'name' => $name,
+  //     ]);
+  //     $botman->reply('Hello ' . $name);
+  // });
+
+  // $botman->hears('say my name', function ($botman) {
+  //     $name = $botman->userStorage()->get('name');
+  //     $botman->reply('Your name is ' . $name);
+  // });
+
+  // $botman->hears('ask name', function ($botman) {
+  //     $this->askFirstName($botman);
+  //     // $this->askEmail($botman);
+  //     // $botman->reply('hello friend');
+
+  // });
+
+  // $botman->hears('template', function ($botman) {
+  //     $this->template($botman);
+
+  // });
+
+  // $botman->hears('buttons', function ($botman) {
+
+  //     $this->questionTemplateIntial($botman);
+  // });
+
+  // $botman->hears('specials', function ($botman) {
+  //     $this->specialsQuestionTemplate($botman);
+  // });
+
+  // $botman->hears('initial', function($botman) {
+  //     $this->initailGreeting($botman);
+  //     $this->askFirstName($botman);
+  // });
+
+  $botman->listen();
+ }
+
+ /**
+  * Template for initial call to questions.
+  */
+ public function questionTemplateIntial($botman)
+ {
+  $question = Question::create('')
+   ->callbackId('guide_buttons')
+   ->addButtons([
+    Button::create('Hours')->value('hours'),
+    Button::create('Location')->value('location'),
+    Button::create('Feedback')->value('feedback'),
+    Button::create('Specials')->value('specials'),
+    Button::create('Menu')->value('card'),
+
+   ]);
+  $botman->reply($question);
+ }
+
+ /**
+  *
+  * function for follow up anything else questions
+  */
+
+ public function anythingElseQuestion($botman)
+ {
+  $question = Question::create('Anything else I can help you with?')
+   ->callbackId('anything_else_questions')
+   ->addButtons([
+    Button::create('Yes')->value('buttons'),
+    Button::create('No')->value('anything'),
+   ]);
+  $botman->reply($question);
+ }
+
+ /**
+  *
+  * function for viewing more specials up anything else questions
+  */
+
+ public function backToInventoryQuestion($botman)
+ {
+  $question = Question::create('Would you like to view more products?')
+   ->callbackId('more_product_questions')
+   ->addButtons([
+    Button::create('Yes')->value('specials'),
+    Button::create('No')->value('done'),
+   ]);
+  $botman->reply($question);
+ }
+
+ /**
+  * Template for callback to questions.
+  */
+ public function questionTemplate($botman)
+ {
+  $question = Question::create('What else can I help you with?')
+   ->callbackId('select_time')
+   ->addButtons([
+    Button::create('Hours')->value('hours'),
+    Button::create('Location')->value('location'),
+    Button::create('Feedback')->value('feedback'),
+    Button::create('Specials')->value('specials'),
+    Button::create('Menu')->value('menu'),
+
+   ]);
+  $botman->reply($question);
+ }
+
+ /**
+  * Creating the Buttons to navigate ypes of specials.
+  */
+ public function specialsQuestionTemplate($botman)
+ {
+  $question = Question::create('What type of specials are you looking for?')
+   ->callbackId('specials_types')
+   ->addButtons([
+    Button::create('Flower')->value('flower'),
+    Button::create('Concentrates')->value('concentrates'),
+    Button::create('Edibles')->value('edibles'),
+    Button::create('All')->value('card'),
+   ]);
+  $botman->reply($question);
+ }
+
+ /**
+  * Place your BotMan logic here.
+  */
+ public function askName($botman)
+ {
+  $botman->ask('Hello! What is your Name?', function (Answer $answer) {
+
+   $name = $answer->getText();
+   $this->say('Nice to meet you ' . $name);
+  });
+ }
+
+ /**
+  * Function for capturing feed back from the bot
+  */
+ public function provideFeedback($botman)
+ {
+  $botman->ask('Thank you for taking the time to provide feedback, Please let us know how we did.', function (Answer $answer) {
+   $feedback = $answer->getText();
+   $this->say($feedback);
+  });
+ }
+
+ /**
+  * Botman function to provide _store hours
+  */
+ public function provideHours($botman)
+ {
+  $botman->reply('We are open daily ' . $this->_store['daysOpen'] . ' from ' . $this->_store['hours'] . ' We are closed ' . $this->_store['daysClosed']);
+  $botman->reply('test');
+ }
+
+ /**
+  * Botman function to provide _store location
+  */
+ public function provideLocation($botman)
+ {
+  $botman->reply('We are located at ' . $this->_store['location']);
+  // $botman->reply('test');
+
+ }
+
+ /**
+  * Botman function to privide list of specials
+  */
+ public function provideSpecials($botman)
+ {
+  $botman->reply('These are our specials');
+ }
+
+ /**
+  * Botman response to provide menu info
+  */
+ public function provideMenu($botman)
+ {
+  $botman->typesAndWaits(1);
+  $botman->reply('this is the menu');
+ }
+
+ public function initailGreeting($botman)
+ {
+  $botman->typesAndWaits(1);
+  $botman->reply('Im here to start to make your experience with Buzz a little easier');
+  $botman->reply('Lets start with some of your info so I can better help you');
+
+ }
+
+ /**
+  * function `askFirstName` takes in `$botman`
+  * to then use the `$botman` ask method to
+  * ask a question and collect the answer
+  */
+
+ public function askFirstname($botman)
+ {
+  $botman->ask('Hello! What is your firstname?', function (Answer $answer) {
+   // Save result
+   $this->firstname = $answer->getText();
+
+   $this->say('Nice to meet you ' . $this->firstname);
+   // Log::info($this->_store);
+
+  });
+ }
+
+ /**
+  * function `askEmail` takes in `$botman`
+  * to then use the `$botman` ask method to
+  * ask a question and collect the answer
+  */
+
+ public function askEmail($botman)
+ {
+  $botman->ask('One more thing - what is your email?', function (Answer $answer) {
+   // Save result
+   $this->email = $answer->getText();
+
+   $this->say('Great - that is all we need, ' . $this->firstname);
+  });
+ }
+
+ /**
+  * template function for the HTML to show a single
+  * card
+  */
+
+ public function showCard($product)
+ {
+  return "
             <style>
             /* Tooltip container */
             .tooltip {
@@ -511,25 +551,25 @@ class BotManController extends Controller
                     </div>
                 </div>
             ";
-    }
+ }
 
-    /*
-     * function to show multiple cards as carousel,
-     * if more then one product is comming in
-     * we are appending an extra div to contain
-     * the cards as a carousel
-     */
+ /*
+  * function to show multiple cards as carousel,
+  * if more then one product is comming in
+  * we are appending an extra div to contain
+  * the cards as a carousel
+  */
 
-    public function showCards($_products)
-    {
-        $html = "<div style='display: flex; overflow-x: scroll; overflow-y: visible;height: max-content;'>";
-        foreach ($_products as $product) {
-            $html .= $this->showCard($product);
-        }
-        $html .= "</div>";
+ public function showCards($_products)
+ {
+  $html = "<div style='display: flex; overflow-x: scroll; overflow-y: visible;height: max-content;'>";
+  foreach ($_products as $product) {
+   $html .= $this->showCard($product);
+  }
+  $html .= "</div>";
 
-        return $html;
+  return $html;
 
-    }
+ }
 
 }

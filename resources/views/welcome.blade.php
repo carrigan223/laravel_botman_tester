@@ -575,7 +575,7 @@
     <body onload="setTimeout(triggerBot, 1000)">
         <h1>HEllo World</h1>
         <a href="#" onclick="botmanChatWidget.whisper('buttons')">Open Bot</a>
-        {{-- 
+        {{--
         <!-- React root DOM -->
         <div id="example">
         </div>
@@ -590,8 +590,8 @@
         var botmanWidget = {
             chatServer: 'http://127.0.0.1:8000/botman',
             // aboutText: 'this bot is testing controllers',
-            introMessage: "Welcome To Buzzbot",
-            frameEndpoint: 'http://127.0.0.1:8000/chatframe'   
+            introMessage: "Welcome To Buzzbot heres a few ways I can help you!",
+            frameEndpoint: 'http://127.0.0.1:8000/chatframe'
         };
     </script>
     <script>
@@ -602,6 +602,6 @@
 
     </script>
 
-    <script src='/js/widget.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/carrigan223/laravel_botman_tester@main/public/js/widget.js'></script>
 
 </html>
