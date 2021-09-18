@@ -93,7 +93,7 @@ class BotManController extends Controller
    */
 
   $dialogflow = \BotMan\Middleware\DialogFlow\V2\DialogFlow::create('en');
-//   $botman->middleware->received($dialogflow);
+  $botman->middleware->received($dialogflow);
   // $botman->hears('(.*)', function ($botman) {
   //     $extras = $botman->getMessage()->getExtras();
   //     $dfMessage = $botman->getMessage();
@@ -107,21 +107,21 @@ class BotManController extends Controller
    */
 
   $botman->hears('{message}', function ($botman, $message) {
-
-   if ($message == 'buttons') {
+   $modifiedMessage = $this->beforeDialogFlowCheck($message, $botman);
+   if ($modifiedMessage == 'buttons') {
     $this->questionTemplateIntial($botman);
-   } elseif ($message == 'card') {
+   } elseif ($modifiedMessage == 'card') {
     $botman->reply($this->showCards($this->_products));
     $this->anythingElseQuestion($botman);
-   } elseif ($message == 'specials') {
+   } elseif ($modifiedMessage == 'specials') {
     $this->specialsQuestionTemplate($botman);
-   } elseif ($message == 'location') {
+   } elseif ($modifiedMessage == 'location') {
     $this->provideLocation($botman);
     $this->questionTemplate($botman);
-   } elseif ($message == 'hours') {
+   } elseif ($modifiedMessage == 'hours') {
     $this->provideHours($botman);
     $this->questionTemplate($botman);
-   } elseif ($message == 'edibles') {
+   } elseif ($modifiedMessage == 'edibles') {
     foreach ($this->_products as $product) {
      if ($product['productType'] === 'Edibles') {
       $botman->reply($this->showCard($product));
@@ -129,7 +129,7 @@ class BotManController extends Controller
      };
     };
     $this->backToInventoryQuestion($botman);
-   } elseif ($message == 'concentrates') {
+   } elseif ($modifiedMessage == 'concentrates') {
     foreach ($this->_products as $product) {
      if ($product['productType'] === 'Concentrates') {
       $botman->reply($this->showCard($product));
@@ -137,7 +137,7 @@ class BotManController extends Controller
      };
     };
     $this->backToInventoryQuestion($botman);
-   } elseif ($message == 'flower') {
+   } elseif ($modifiedMessage == 'flower') {
     foreach ($this->_products as $product) {
      if ($product['productType'] === 'Flower') {
       $botman->reply($this->showCard($product));
@@ -145,143 +145,12 @@ class BotManController extends Controller
      };
     };
     $this->backToInventoryQuestion($botman);
-   } elseif ($message == 'done') {
+   } elseif ($modifiedMessage == 'done') {
     $botman->reply("Fantastic, I'm here to help if you need anything!");
    } else {
-    $extras = $botman->getMessage()->getExtras();
-    $botman->reply($extras['apiReply']);
+    $botman->reply('this is the end of the line my friend');
    }
-
   });
-
-  /**
-   * the list of commands for botman to handle without
-   * passing along to dialogflow
-   */
-
-  // $botman->hears('feedback', function ($botman) {
-  //     $this->provideFeedback($botman);
-  // });
-
-  // $botman->hears('anything', function ($botman) {
-  //     $this->anythingElseQuestion($botman);
-  // });
-
-  // $botman->hears('done', function ($botman) {
-  //     $botman->reply("Fantastic, I'm here to help if you need anything!");
-  // });
-
-  // $botman->hears('flower', function ($botman) {
-  //     foreach ($this->_products as $product) {
-  //         if ($product['productType'] === 'Flower') {
-  //             $botman->reply($this->showCard($product));
-
-  //         };
-  //     };
-  //     $this->backToInventoryQuestion($botman);
-
-  // });
-
-  // $botman->hears('concentrates', function ($botman) {
-  //     foreach ($this->_products as $product) {
-  //         if ($product['productType'] === 'Concentrates') {
-  //             $botman->reply($this->showCard($product));
-
-  //         };
-  //     };
-  //     $this->backToInventoryQuestion($botman);
-
-  // });
-
-  // $botman->hears('edibles', function ($botman) {
-  //     foreach ($this->_products as $product) {
-  //         if ($product['productType'] === 'Edible') {
-  //             $botman->reply($this->showCard($product));
-  //         };
-  //     };
-  //     $this->backToInventoryQuestion($botman);
-
-  // });
-
-  // $botman->hears('card', function ($botman) {
-  //     $botman->reply($this->showCards($this->_products));
-  //     $this->anythingElseQuestion($botman);
-
-  // });
-
-  // $botman->hears('initial', function ($botman) {
-  //     $this->initailGreeting($botman);
-  //     $botman->ask('what is your name', function ($answer, $conversation) {
-  //         $this->firstname = $answer->getText();
-  //         $conversation->say('Nice to meet you ' . $this->firstname);
-  //         // $this->questionTemplate($botman);
-  //         $conversation->ask('Also if you could provide me with your Email?', function ($answer, $conversation) {
-  //             $this->email = $answer->getText();
-  //             $conversation->say('great thank you ' . $this->firstname . ' your email is ' . $this->email);
-  //             $conversation->ask('And your phone number please', function ($answer, $conversation) {
-  //                 $this->phone = $answer->getText();
-  //                 $conversation->say('great thank you ' . $this->firstname . ' your phone number is ' . $this->phone);
-  //             });
-  //         });
-
-  //     });
-
-  // });
-
-  // $botman->hears('hours', function ($botman) {
-  //     $this->provideHours($botman);
-  //     $this->questionTemplate($botman);
-
-  // });
-
-  // $botman->hears('Location', function ($botman) {
-  //     $this->provideLocation($botman);
-  //     $this->questionTemplate($botman);
-
-  // });
-
-  // $botman->hears('menu', function ($botman) {
-  //     $this->provideMenu($botman);
-  //     $this->questionTemplate($botman);
-  // });
-
-  // $botman->hears('my name is {name}', function ($botman, $name) {
-  //     $botman->userStorage()->save([
-  //         'name' => $name,
-  //     ]);
-  //     $botman->reply('Hello ' . $name);
-  // });
-
-  // $botman->hears('say my name', function ($botman) {
-  //     $name = $botman->userStorage()->get('name');
-  //     $botman->reply('Your name is ' . $name);
-  // });
-
-  // $botman->hears('ask name', function ($botman) {
-  //     $this->askFirstName($botman);
-  //     // $this->askEmail($botman);
-  //     // $botman->reply('hello friend');
-
-  // });
-
-  // $botman->hears('template', function ($botman) {
-  //     $this->template($botman);
-
-  // });
-
-  // $botman->hears('buttons', function ($botman) {
-
-  //     $this->questionTemplateIntial($botman);
-  // });
-
-  // $botman->hears('specials', function ($botman) {
-  //     $this->specialsQuestionTemplate($botman);
-  // });
-
-  // $botman->hears('initial', function($botman) {
-  //     $this->initailGreeting($botman);
-  //     $this->askFirstName($botman);
-  // });
 
   $botman->listen();
  }
@@ -302,6 +171,40 @@ class BotManController extends Controller
 
    ]);
   $botman->reply($question);
+ }
+
+ /**
+  * function procesing incoming mesage to match to
+  * our commands other wise send to dialogflow then recycle
+  *
+  */
+
+ public function beforeDialogFlowCheck($message, $botman)
+ {
+  if ($message == 'buttons') {
+   return 'buttons';
+  } elseif ($message == 'card') {
+   return 'card';
+  } elseif ($message == 'specials') {
+   return 'specials';
+  } elseif ($message == 'location') {
+   return 'location';
+  } elseif ($message == 'hours') {
+   return 'hours';
+  } elseif ($message == 'edibles') {
+   return 'edibles';
+  } elseif ($message == 'concentrates') {
+   return 'concentrates';
+  } elseif ($message == 'done') {
+   return 'done';
+  } else {
+   $extras = $botman->getMessage()->getExtras();
+   $dfMessage = $botman->getMessage();
+   Log::info(print_r($dfMessage, true));
+   $newMessage = $extras['apiParameters']['return'];
+   Log::info($newMessage);
+   return $newMessage;
+  }
  }
 
  /**
@@ -399,7 +302,7 @@ class BotManController extends Controller
  public function provideHours($botman)
  {
   $botman->reply('We are open daily ' . $this->_store['daysOpen'] . ' from ' . $this->_store['hours'] . ' We are closed ' . $this->_store['daysClosed']);
-  $botman->reply('test');
+  
  }
 
  /**

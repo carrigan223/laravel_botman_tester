@@ -591,7 +591,7 @@
             chatServer: 'http://127.0.0.1:8000/botman',
             // aboutText: 'this bot is testing controllers',
             introMessage: "Welcome To Buzzbot heres a few ways I can help you!",
-            frameEndpoint: 'http://127.0.0.1:8000/chatframe'
+            frameEndpoint: 'http://127.0.0.1:8000/api/chatframe'
         };
     </script>
     <script>
