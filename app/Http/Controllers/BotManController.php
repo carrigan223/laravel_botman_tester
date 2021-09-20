@@ -148,7 +148,7 @@ class BotManController extends Controller
    } elseif ($modifiedMessage == 'done') {
     $botman->reply("Fantastic, I'm here to help if you need anything!");
    } else {
-    $botman->reply('this is the end of the line my friend');
+    $botman->reply($modifiedMessage);
    }
   });
 
@@ -198,10 +198,15 @@ class BotManController extends Controller
   } elseif ($message == 'done') {
    return 'done';
   } else {
-   $extras = $botman->getMessage()->getExtras();
+   $extras    = $botman->getMessage()->getExtras();
    $dfMessage = $botman->getMessage();
    Log::info(print_r($dfMessage, true));
-   $newMessage = $extras['apiParameters']['return'];
+   if (count($extras['apiParameters']) > 0) {
+    $newMessage = $extras['apiParameters']['return'];
+   } else {
+    $newMessage = $extras['apiReply'];
+   }
+
    Log::info($newMessage);
    return $newMessage;
   }
@@ -302,7 +307,7 @@ class BotManController extends Controller
  public function provideHours($botman)
  {
   $botman->reply('We are open daily ' . $this->_store['daysOpen'] . ' from ' . $this->_store['hours'] . ' We are closed ' . $this->_store['daysClosed']);
-  
+
  }
 
  /**
